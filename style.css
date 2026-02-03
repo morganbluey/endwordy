@@ -1,0 +1,14 @@
+:root {
+    background-color: antiquewhite;
+}
+
+.answer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.answerInput {
+    border-radius: 10px;
+    border-width: 3px;
+}
