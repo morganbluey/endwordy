@@ -2,13 +2,36 @@
     background-color: antiquewhite;
 }
 
-.answer {
+body {
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 100vw;
+}
+
+.answer {
 }
 
 .answerInput {
-    border-radius: 10px;
+    height: 5vw;
+    width: 40vw;
+    border-radius: 13px;
     border-width: 3px;
+}
+
+.card {
+    background-color: azure;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 30vw;
+    width: 50vw;
+    border-radius: 20px;
+    border-width: 3px;
+    border-style: solid;
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+.before {
 }
