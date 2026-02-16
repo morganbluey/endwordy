@@ -9,7 +9,7 @@ body {
     height: 100vw;
 }
 
-.answerInput {
+#answerInput {
     height: 5vw;
     width: 40vw;
     border-radius: 13px;
@@ -28,4 +28,49 @@ body {
     border-width: 3px;
     border-style: solid;
     box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+.before {
+    font-family: 'Alan Sans';
+    padding: 3vw;
+}
+
+#beforeWord {
+    /* float: left; */
+    unicode-bidi: bidi-override;
+    direction: rtl;
+}
+
+#beforeWord::first-letter {
+    color: red;
+    font-weight: bold;
+}
+
+/* Fonts */
+
+/* alan-sans-regular - latin */
+@font-face {
+  font-display: swap;
+  font-family: 'Alan Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./fonts/alan-sans-v5-latin-regular.woff2') format('woff2');
+}
+
+/* alan-sans-600 - latin */
+@font-face {
+  font-display: swap;
+  font-family: 'Alan Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: url('./fonts/alan-sans-v5-latin-600.woff2') format('woff2');
+}
+
+/* alan-sans-800 - latin */
+@font-face {
+  font-display: swap;
+  font-family: 'Alan Sans';
+  font-style: normal;
+  font-weight: 800;
+  src: url('./fonts/alan-sans-v5-latin-800.woff2') format('woff2');
 }
