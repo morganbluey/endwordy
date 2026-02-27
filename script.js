@@ -36,6 +36,9 @@ function initialize() {
     if (!userID) localStorage.setItem('endwordy_userID', setUserID());
 
     peer = new Peer(userID);
+    peer.on('open', (id) => {
+        console.log('My Peer is ready with ID:', id); // later out!
+    });
 
     document.querySelector('.firstOpen').showModal();
     document.getElementById('myCode').innerText = userID;
