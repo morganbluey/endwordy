@@ -6,6 +6,7 @@
     <meta name="viewport">
     <link rel="stylesheet" href="style.css">
     <script type="module" src="script.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <title>Endwordy</title>
 </head>
 
@@ -19,7 +20,20 @@
             <input id="answerInput" type="text" name="answerIn">
         </div>
     </div>
-    
+    <dialog class="firstOpen">
+        <div class="dialogTitle">Welcome to Endwordy!</div>
+        <div class="row">
+            <div class="column">
+                <div>Write your friend's code</div>
+                <input id="friendCodeInput" type="number" name="friendCodeIn">
+                <button id="enterRoom">Connect</button>
+            </div>
+            <div class="column">
+                <div>or give yours to your friend:</div>
+                <div id="myCode"></div>
+            </div>
+        </div>
+    </dialog>
 </body>
 
 </html>

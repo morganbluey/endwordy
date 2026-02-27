@@ -9,6 +9,17 @@ body {
     height: 100vw;
 }
 
+.column {
+    float: left;
+    width: 50%;
+}
+
+.row:after {
+    content:"";
+    display: table;
+    clear: both;
+}
+
 #answerInput {
     height: 5vw;
     width: 40vw;
@@ -46,6 +57,15 @@ body {
     font-weight: bold;
 }
 
+dialog::backdrop {
+    background-color: 0, 0, 0, 0.7;
+    backdrop-filter: blur(4px);
+}
+
+.firstOpen {
+    border-radius: 12px;
+    background-color: cornsilk;
+}
 /* Fonts */
 
 /* alan-sans-regular - latin */

@@ -8,6 +8,9 @@ const statusDebugNoAnswer = "No answer from the server.";
 let givenWord = "abcdefg";
 let lastLetter = "";
 
+let peer;
+let currentConnection;
+
 
 /**
  * Function for visual highlighting of the last letter of previous word, 
@@ -29,8 +32,18 @@ function initialize() {
     document.getElementById('statusText').innerText = 'Your turn. Start by typing a word.'
     document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
 
-    const userID = localStorage.getItem('userID');
-    if (!userID) localStorage.setItem('userID', setUserID());
+    const userID = localStorage.getItem('endwordy_userID');
+    if (!userID) localStorage.setItem('endwordy_userID', setUserID());
+
+    peer = new Peer(userID);
+
+    document.querySelector('.firstOpen').showModal();
+    document.getElementById('myCode').innerText = userID;
+
+    peer.on('connection', (conn) => {
+        currentConnection = conn;
+        setupConnectionListeners(conn);
+    });
 }
 
 /**
@@ -73,7 +86,31 @@ function setupEventListeners() {
         if (e.key === 'Enter') {
             checkWord();
         }
-    })
+    });
+    document.getElementById('enterRoom').addEventListener('click', () => {
+        const code = document.getElementById('friendCodeInput').value;
+        if (peer) {
+            const conn = peer.connect(code);
+            setupConnectionListeners(conn);
+        }
+    });
+}
+
+function setupConnectionListeners(conn) {
+    currentConnection = conn;
+
+    conn.on('open', () => {
+        conn.send('My future name.');
+        console.log("Erfolgreich verbunden mit ID:", conn.peer);
+    });
+
+    conn.on('data', () => {
+        console.log('Message:', data);
+    });
+
+    conn.on('error', (err) => {
+        console.log(err); //later out or change
+    });
 }
 
 /**
