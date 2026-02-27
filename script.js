@@ -9,7 +9,10 @@ let givenWord = "abcdefg";
 let lastLetter = "";
 
 
-
+/**
+ * Function for visual highlighting of the last letter of previous word, 
+ * so user knows, with which letter to start the next word.
+ */
 function markLast() {
     const reversed = givenWord.split('').reverse().join('');
     document.getElementById('beforeWord').innerText = reversed;
@@ -28,7 +31,6 @@ function initialize() {
 
     const userID = localStorage.getItem('userID');
     if (!userID) localStorage.setItem('userID', setUserID());
-    console.log(userID);
 }
 
 /**
@@ -74,6 +76,10 @@ function setupEventListeners() {
     })
 }
 
+/**
+ * Helper function, to create a unique user ID, if non existent yet.
+ * @returns the randomly generated user ID
+ */
 function setUserID() {
     let id = "";
     for(let i = 0; i < 6; i++) {
