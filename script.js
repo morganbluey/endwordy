@@ -1,5 +1,14 @@
+const statusSuccess = "It's your friends turn. Wait for their word.";
+const statusNoExist = "This word doesn't exist. Try again.";
+const statusFail = "There was a general problem. Please try again later.";
+
+const statusDebugNoJSON = "Answer not in JSON.";
+const statusDebugNoAnswer = "No answer from the server.";
+
 let givenWord = "abcdefg";
 let lastLetter = "";
+
+
 
 function markLast() {
     const reversed = givenWord.split('').reverse().join('');
@@ -18,29 +27,41 @@ function initialize() {
     document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
 }
 
-async function checkWord () {
-    const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${givenWord}`;
+/**
+ * This function sends the word provided in the input field to an online dictionary API,
+ * which checks, if the word exists.
+ */
+async function checkWord() {
+    givenWord = document.getElementById('answerInput').value;
+    // const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${givenWord}`;
+    const url = `https://freedictionaryapi.com/api/v1/entries/en/${givenWord}`;
     const response = await fetch(url, { method: "GET" });
+    let currentStatus = "Big Prob. If Statement wasn't entered..."
     if (response.ok) {
         const wordInfo = await response.json();
-        if (wordInfo && wordInfo[0].title === "No definition found") {
-            document.getElementById('statusText').innerText = 'This word doesn\'t exist. Try again';
-        } else if (wordInfo && wordInfo[0].word) {
-            document.getElementById('statusText').innerText = 'It\'s your friends turn. Wait for their word.';
+        if (wordInfo) {
+            if (wordInfo.entries.length > 0) {
+                currentStatus = statusSuccess;
+            } else {
+                currentStatus = statusNoExist;
+            }
         } else {
-            document.getElementById('statusText').innerText = 'Answer not in JSON. Please try again';
+            currentStatus = statusDebugNoJSON;
         }
     } else {
-        document.getElementById('statusText').innerText = 'No answer. Please try again';
+        currentStatus = statusDebugNoAnswer;
     }
+    // else { currentStatus = statusFail; }
+    document.getElementById('statusText').innerText = currentStatus;
 }
 
+/**
+ * This function registers all event listeners, such as key down events
+ */
 function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             checkWord();
-        } else {
-            givenWord = document.getElementById('answerInput').value;
         }
     })
 }
