@@ -104,7 +104,7 @@ function setupConnectionListeners(conn) {
         console.log("Erfolgreich verbunden mit ID:", conn.peer);
     });
 
-    conn.on('data', () => {
+    conn.on('data', (data) => {
         console.log('Message:', data);
     });
 
