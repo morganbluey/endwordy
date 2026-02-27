@@ -2,7 +2,7 @@ const statusSuccess = "It's your friends turn. Wait for their word.";
 const statusNoExist = "This word doesn't exist. Try again.";
 const statusFail = "There was a general problem. Please try again later.";
 
-const statusDebugNoJSON = "Answer not in JSON.";
+const statusDebugNoJSON = "Answer not in JSON format.";
 const statusDebugNoAnswer = "No answer from the server.";
 
 let givenWord = "abcdefg";
@@ -25,6 +25,10 @@ function initialize() {
 
     document.getElementById('statusText').innerText = 'Your turn. Start by typing a word.'
     document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
+
+    const userID = localStorage.getItem('userID');
+    if (!userID) localStorage.setItem('userID', setUserID());
+    console.log(userID);
 }
 
 /**
@@ -33,10 +37,13 @@ function initialize() {
  */
 async function checkWord() {
     givenWord = document.getElementById('answerInput').value;
+
     // const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${givenWord}`;
     const url = `https://freedictionaryapi.com/api/v1/entries/en/${givenWord}`;
+
     const response = await fetch(url, { method: "GET" });
     let currentStatus = "Big Prob. If Statement wasn't entered..."
+
     if (response.ok) {
         const wordInfo = await response.json();
         if (wordInfo) {
@@ -52,6 +59,7 @@ async function checkWord() {
         currentStatus = statusDebugNoAnswer;
     }
     // else { currentStatus = statusFail; }
+
     document.getElementById('statusText').innerText = currentStatus;
 }
 
@@ -64,6 +72,14 @@ function setupEventListeners() {
             checkWord();
         }
     })
+}
+
+function setUserID() {
+    let id = "";
+    for(let i = 0; i < 6; i++) {
+        id = id + Math.floor(Math.random() * 10);
+    }
+    return Number(id);
 }
 
 document.addEventListener('DOMContentLoaded', initialize);
