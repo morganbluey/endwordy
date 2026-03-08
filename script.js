@@ -5,8 +5,12 @@ const statusFail = "There was a general problem. Please try again later.";
 const statusDebugNoJSON = "Answer not in JSON format.";
 const statusDebugNoAnswer = "No answer from the server.";
 
+const textMyTurn = "Your turn. Start by typing a word.";
+const textTheirTurn = "It's your friends turn. Wait for their word.";
+
 let givenWord = "abcdefg";
 let lastLetter = "";
+let myTurn;
 
 let peer;
 let currentConnection;
@@ -29,8 +33,13 @@ function initialize() {
 
     setupEventListeners();
 
-    document.getElementById('statusText').innerText = 'Your turn. Start by typing a word.'
-    document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
+    if (initialTurn()) {
+        document.getElementById('statusText').innerText = textMyTurn;
+        document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
+    } else {
+        document.getElementById('statusText').innerText = textTheirTurn;
+        document.getElementsByName('answerIn')[0].disabled = true;
+    }
 
     const userID = localStorage.getItem('endwordy_userID');
     if (!userID) localStorage.setItem('endwordy_userID', setUserID());
@@ -104,7 +113,7 @@ function setupConnectionListeners(conn) {
 
     conn.on('open', () => {
         conn.send('My future name.');
-        console.log("Erfolgreich verbunden mit ID:", conn.peer);
+        document.querySelector('.firstOpen').close();
     });
 
     conn.on('data', (data) => {
@@ -126,6 +135,11 @@ function setUserID() {
         id = id + Math.floor(Math.random() * 10);
     }
     return Number(id);
+}
+
+function initialTurn() {
+    let turn = Math.round(Math.random());
+    return Boolean(turn);
 }
 
 document.addEventListener('DOMContentLoaded', initialize);
