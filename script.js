@@ -34,13 +34,7 @@ function initialize() {
 
     setupEventListeners();
 
-    if (initialTurn()) {
-        document.getElementById('statusText').innerText = textMyTurn;
-        document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
-    } else {
-        document.getElementById('statusText').innerText = textTheirTurn;
-        document.getElementsByName('answerIn')[0].disabled = true;
-    }
+    myTurn = initialTurn();
 
     const userID = localStorage.getItem('endwordy_userID');
     if (!userID) localStorage.setItem('endwordy_userID', setUserID());
@@ -64,7 +58,9 @@ function initialize() {
  * show message to think of random word.
  */
 function initializeMyTurn() {
-
+    document.getElementById('statusText').innerText = textMyTurn;
+    document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
+    document.querySelector('.firstOpen').close();
 }
 
 /**
@@ -73,7 +69,9 @@ function initializeMyTurn() {
  * enter waiting state.
  */
 function initializeTheirTurn() {
-
+    document.getElementById('statusText').innerText = textTheirTurn;
+    document.getElementsByName('answerIn')[0].disabled = true;
+    document.querySelector('.firstOpen').close();
 }
 
 /**
@@ -148,11 +146,17 @@ function setupConnectionListeners(conn) {
     currentConnection = conn;
 
     conn.on('open', () => {
-        conn.send('My future name.');
-        document.querySelector('.firstOpen').close();
+        conn.send({ type: "connectionOpen", turn: !myTurn });
     });
 
     conn.on('data', (data) => {
+        if (data && data.type && data.type === "connectionOpen") {
+            if (data.turn === true) {
+                initializeMyTurn(); 
+            } else {
+                initializeTheirTurn();
+            }
+        }
         console.log('Message:', data);
     });
 
