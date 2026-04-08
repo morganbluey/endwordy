@@ -80,15 +80,15 @@ function initializeTheirTurn() {
  * - make input field appear
  * - display text that its my turn plus on which letter the next word needs to be
  */
-function waitforMyTurn() {
-    conn.on('data', (data) => {
-        if (data && data.type && data.type === "switchTurn") {
-            document.getElementById('answerInput').hidden = false;
-            friendsWord = data.word;
-            markLast();
-        }
-    })
-}
+// function waitforMyTurn() {
+//     conn.on('data', (data) => {
+//         if (data && data.type && data.type === "switchTurn") {
+//             document.getElementById('answerInput').hidden = false;
+//             friendsWord = data.word;
+//             markLast();
+//         }
+//     })
+// }
 
 /**
  * This function sends the word provided in the input field to an online dictionary API,
@@ -139,6 +139,12 @@ function setupEventListeners() {
         if (peer) {
             const conn = peer.connect(code);
             setupConnectionListeners(conn);
+            conn.send({ type: "connectionOpen", turn: !myTurn });
+            if (myTurn === true) {
+                initializeMyTurn(); 
+            } else {
+                initializeTheirTurn();
+            }
         }
     });
 }
@@ -146,9 +152,9 @@ function setupEventListeners() {
 function setupConnectionListeners(conn) {
     currentConnection = conn;
 
-    conn.on('open', () => {
-        conn.send({ type: "connectionOpen", turn: !myTurn });
-    });
+    // conn.on('open', () => {
+    //     console.log("im sending eventhough im not actively typing code")
+    // });
 
     conn.on('data', (data) => {
         if (data && data.type && data.type === "connectionOpen") {
