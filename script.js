@@ -107,9 +107,10 @@ async function checkWord() {
         const wordInfo = await response.json();
         if (wordInfo) {
             if (wordInfo.entries.length > 0) {
+                currentConnection.send({ type: "switchTurn", word: myWord });
                 currentStatus = statusSuccess;
                 document.getElementById('answerInput').hidden = true;
-                currentConnection.send({ type: "switchTurn", word: myWord });
+                document.getElementById('beforeWord').innerText = '';
             } else {
                 currentStatus = statusNoExist;
             }
@@ -156,6 +157,11 @@ function setupConnectionListeners(conn) {
             } else {
                 initializeTheirTurn();
             }
+        }
+        if (data && data.type && data.type === "switchTurn") {
+            document.getElementById('answerInput').hidden = false;
+            friendsWord = data.word;
+            markLast();
         }
         console.log('Message:', data);
     });
