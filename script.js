@@ -8,7 +8,8 @@ const statusDebugNoAnswer = "No answer from the server.";
 const textMyTurn = "Your turn. Start by typing a word.";
 const textTheirTurn = "It's your friends turn. Wait for their word.";
 
-let givenWord = "abcdefg";
+let myWord = "abcdefg";
+let friendsWord;
 let lastLetter = "";
 let myTurn;
 
@@ -21,14 +22,14 @@ let currentConnection;
  * so user knows, with which letter to start the next word.
  */
 function markLast() {
-    const reversed = givenWord.split('').reverse().join('');
+    const reversed = friendsWord.split('').reverse().join('');
     document.getElementById('beforeWord').innerText = reversed;
-    lastLetter = givenWord[givenWord.length - 1];
+    lastLetter = friendsWord[friendsWord.length - 1];
     document.getElementsByName('answerIn')[0].placeholder = 'Word with ' + lastLetter;
 }
 
 function initialize() {
-    givenWord = "0009";
+    myWord = "0009";
     lastLetter = "";
 
     setupEventListeners();
@@ -59,14 +60,47 @@ function initialize() {
 }
 
 /**
+ * enable all buttons and checks and input fields.
+ * show message to think of random word.
+ */
+function initializeMyTurn() {
+
+}
+
+/**
+ * disable input field and enter button.
+ * display message to wait for friends word.
+ * enter waiting state.
+ */
+function initializeTheirTurn() {
+
+}
+
+/**
+ * ig on.data receive specific message type, like { "switchTurn", <word> }
+ * - enable enter button
+ * - make input field appear
+ * - display text that its my turn plus on which letter the next word needs to be
+ */
+function waitforMyTurn() {
+    conn.on('data', (data) => {
+        if (data && data.type && data.type === "switchTurn") {
+            document.getElementById('answerInput').hidden = false;
+            friendsWord = data.word;
+            markLast();
+        }
+    })
+}
+
+/**
  * This function sends the word provided in the input field to an online dictionary API,
  * which checks, if the word exists.
  */
 async function checkWord() {
-    givenWord = document.getElementById('answerInput').value;
+    myWord = document.getElementById('answerInput').value;
 
     // const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${givenWord}`;
-    const url = `https://freedictionaryapi.com/api/v1/entries/en/${givenWord}`;
+    const url = `https://freedictionaryapi.com/api/v1/entries/en/${myWord}`;
 
     const response = await fetch(url, { method: "GET" });
     let currentStatus = "Big Prob. If Statement wasn't entered..."
@@ -76,6 +110,8 @@ async function checkWord() {
         if (wordInfo) {
             if (wordInfo.entries.length > 0) {
                 currentStatus = statusSuccess;
+                document.getElementById('answerInput').hidden = true;
+                currentConnection.send({ type: "switchTurn", word: myWord });
             } else {
                 currentStatus = statusNoExist;
             }
