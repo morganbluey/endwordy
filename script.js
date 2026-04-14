@@ -36,7 +36,8 @@ function initialize() {
     const userID = (checkIfUserIdExists ? checkIfUserIdExists : setUserID());
     localStorage.setItem('endwordy_userID', userID);
 
-    peer = new Peer(userID, { host: 'localhost', port: 9000, path: '/endwordy' });
+    peer = new Peer(userID);
+    // peer = new Peer(userID, { host: 'localhost', port: 9000, path: '/endwordy' }); // for local testing
 
     peer.on('open', (id) => {
         id = userID;
