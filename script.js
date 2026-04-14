@@ -1,4 +1,3 @@
-const statusSuccess = "It's your friends turn. Wait for their word.";
 const statusNoExist = "This word doesn't exist. Try again.";
 const statusFail = "There was a general problem. Please try again later.";
 
@@ -6,7 +5,9 @@ const statusDebugNoJSON = "Answer not in JSON format.";
 const statusDebugNoAnswer = "No answer from the server.";
 
 const textMyTurn = "Your turn. Start by typing a word.";
-const textTheirTurn = "It's your friends turn. Wait for their word.";
+const textTheirTurn = "Friends turn. Wait for their word.";
+
+const textNextTurn = "Find a next word. Friends word:"
 
 let myWord = "abcdefg";
 let friendsWord;
@@ -29,26 +30,43 @@ function markLast() {
 }
 
 function initialize() {
-    myWord = "0009";
-    lastLetter = "";
-
-    setupEventListeners();
-
-    myTurn = initialTurn();
+    myWord = "0009"; //for now not used
+    lastLetter = ""; // for now not used
 
     const userID = localStorage.getItem('endwordy_userID');
     if (!userID) localStorage.setItem('endwordy_userID', setUserID());
 
-    peer = new Peer(userID);
+    peer = new Peer(userID, { debug: 2 });
+
     peer.on('open', (id) => {
         console.log('My Peer is ready with ID:', id); // later out!
+        document.getElementById('myCode').innerText = id;
     });
 
+    peer.on('error', (err) => {
+        console.error("PeerJS Fehler gefunden:", err.type);
+        
+        // WICHTIG: Kein automatisches Reload mehr! 
+        // Wir zeigen dem User lieber eine Nachricht oder generieren intern neu.
+        if (err.type === 'unavailable-id') {
+            const newID = setUserID();
+            localStorage.setItem('endwordy_userID', newID);
+            console.log("ID belegt, versuche neue ID beim nächsten Start.");
+        }
+        
+        if (err.type === 'network' || err.type === 'server-error') {
+            document.getElementById('statusText').innerText = "Serververbindung verloren. Bitte warte 5 Sek.";
+            // Wir trennen alles sauber
+            peer.disconnect();
+        }
+    });
+
+    setupEventListeners();
+
     document.querySelector('.firstOpen').showModal();
-    document.getElementById('myCode').innerText = userID;
+    // document.getElementById('myCode').innerText = userID;
 
     peer.on('connection', (conn) => {
-        currentConnection = conn;
         setupConnectionListeners(conn);
     });
 }
@@ -70,7 +88,7 @@ function initializeMyTurn() {
  */
 function initializeTheirTurn() {
     document.getElementById('statusText').innerText = textTheirTurn;
-    document.getElementsByName('answerIn')[0].disabled = true;
+    document.getElementsByName('answerIn')[0].hidden = true;
     document.querySelector('.firstOpen').close();
 }
 
@@ -108,9 +126,10 @@ async function checkWord() {
         if (wordInfo) {
             if (wordInfo.entries.length > 0) {
                 currentConnection.send({ type: "switchTurn", word: myWord });
-                currentStatus = statusSuccess;
+                currentStatus = textTheirTurn;
                 document.getElementById('answerInput').hidden = true;
                 document.getElementById('beforeWord').innerText = '';
+                document.getElementById('answerInput').value = '';
             } else {
                 currentStatus = statusNoExist;
             }
@@ -136,32 +155,36 @@ function setupEventListeners() {
     });
     document.getElementById('enterRoom').addEventListener('click', () => {
         const code = document.getElementById('friendCodeInput').value;
-        if (peer) {
+        if (peer && !peer.disconnected) {
             const conn = peer.connect(code);
-            setupConnectionListeners(conn);
 
-            conn.on('open', () => {
-                conn.send({ type: "connectionOpen", turn: !myTurn });
-
-                if (myTurn === true) {
-                    initializeMyTurn();
-                } else {
-                    initializeTheirTurn();
-                }
-            });
+            if (conn) {
+                setupConnectionListeners(conn);
+                
+                myTurn = initialTurn();
+                conn.on('open', () => {
+                    conn.send({ type: "connectionOpen", turn: !myTurn });
+                    myTurn ? initializeMyTurn() : initializeTheirTurn();
+                });
+            } else {
+                console.error("Verbindung konnte nicht erstellt werden."); //later out or change
+            }
+        } else {
+            alert("Peer ist noch nicht bereit oder die Verbindung zum Server ist unterbrochen."); //later out or change
         }
     });
 }
 
 function setupConnectionListeners(conn) {
+    if (!conn) {
+        console.error("Error: setupConnectionListeners was called without having a connection established!");
+        return;
+    }
+
     currentConnection = conn;
 
-    conn.on('open', () => {
-        console.log("Connection established")
-    });
-
     conn.on('data', (data) => {
-        if (data && data.type && data.type === "connectionOpen") {
+        if (data && data.type === "connectionOpen") {
             if (data.turn === true) {
                 initializeMyTurn(); 
             } else {
@@ -169,6 +192,7 @@ function setupConnectionListeners(conn) {
             }
         }
         if (data && data.type && data.type === "switchTurn") {
+            document.getElementById('statusText').innerText = textNextTurn;
             document.getElementById('answerInput').hidden = false;
             friendsWord = data.word;
             markLast();
@@ -180,9 +204,9 @@ function setupConnectionListeners(conn) {
         console.log(err); //later out or change
     });
 
-    conn.on('close', () => {
-        // TODO
-    })
+    // conn.on('close', () => {
+    //     if (peer) peer.destroy();
+    // });
 }
 
 /**
@@ -194,7 +218,7 @@ function setUserID() {
     for(let i = 0; i < 6; i++) {
         id = id + Math.floor(Math.random() * 10);
     }
-    return Number(id);
+    return id;
 }
 
 function initialTurn() {
@@ -203,3 +227,9 @@ function initialTurn() {
 }
 
 document.addEventListener('DOMContentLoaded', initialize);
+
+window.addEventListener('beforeunload', () => {
+    if (peer) {
+        peer.destroy();
+    }
+});
