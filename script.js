@@ -12,7 +12,6 @@ let myWord = "abcdefg";
 let friendsWord;
 let lastLetter = "";
 let myTurn;
-let initialized = false;
 
 let peer;
 let currentConnection;
@@ -62,7 +61,6 @@ function initializeMyTurn() {
     document.getElementById('statusText').innerText = textMyTurn;
     document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
     document.querySelector('.firstOpen').close();
-    initialized = true;
 }
 
 /**
@@ -74,7 +72,6 @@ function initializeTheirTurn() {
     document.getElementById('statusText').innerText = textTheirTurn;
     document.getElementsByName('answerIn')[0].disabled = true;
     document.querySelector('.firstOpen').close();
-    initialized = true;
 }
 
 /**
@@ -142,15 +139,16 @@ function setupEventListeners() {
         if (peer) {
             const conn = peer.connect(code);
             setupConnectionListeners(conn);
-            console.log(myTurn);
-            conn.send({ type: "connectionOpen", turn: !myTurn });
-            console.log(myTurn);
-            if (myTurn === true) {
-                initializeMyTurn(); 
-            } else {
-                initializeTheirTurn();
-            }
-            initialized = true;
+
+            conn.on('open', () => {
+                conn.send({ type: "connectionOpen", turn: !myTurn });
+
+                if (myTurn === true) {
+                    initializeMyTurn();
+                } else {
+                    initializeTheirTurn();
+                }
+            });
         }
     });
 }
@@ -163,25 +161,28 @@ function setupConnectionListeners(conn) {
     });
 
     conn.on('data', (data) => {
-        if (data && data.type && data.type === "connectionOpen" && !initialized) {
+        if (data && data.type && data.type === "connectionOpen") {
             if (data.turn === true) {
                 initializeMyTurn(); 
             } else {
                 initializeTheirTurn();
             }
-            initialized = true;
         }
         if (data && data.type && data.type === "switchTurn") {
             document.getElementById('answerInput').hidden = false;
             friendsWord = data.word;
             markLast();
         }
-        console.log('Message:', data);
+        console.log('Message:', data); //later out
     });
 
     conn.on('error', (err) => {
         console.log(err); //later out or change
     });
+
+    conn.on('close', () => {
+        // TODO
+    })
 }
 
 /**
