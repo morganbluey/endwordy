@@ -66,6 +66,16 @@ dialog::backdrop {
     border-radius: 12px;
     background-color: cornsilk;
 }
+
+.error-border {
+    border: 2px solid red;
+    outline: none;
+}
+
+#invalidAnswer {
+    color: red;
+    font-family: 'Alan Sans';
+}
 /* Fonts */
 
 /* alan-sans-regular - latin */

@@ -7,7 +7,9 @@ const statusDebugNoAnswer = "No answer from the server.";
 const textMyTurn = "Your turn. Start by typing a word.";
 const textTheirTurn = "Friends turn. Wait for their word.";
 
-const textNextTurn = "Find a next word. Friends word:"
+const textNextTurn = "Find a next word. Friends word:";
+
+const errorWrongStart = "Word doesn't start with correct letter."
 
 let myWord = "abcdefg";
 let friendsWord;
@@ -30,34 +32,31 @@ function markLast() {
 }
 
 function initialize() {
-    myWord = "0009"; //for now not used
-    lastLetter = ""; // for now not used
+    const checkIfUserIdExists = localStorage.getItem('endwordy_userID');
+    const userID = (checkIfUserIdExists ? checkIfUserIdExists : setUserID());
+    localStorage.setItem('endwordy_userID', userID);
 
-    const userID = localStorage.getItem('endwordy_userID');
-    if (!userID) localStorage.setItem('endwordy_userID', setUserID());
-
-    peer = new Peer(userID, { debug: 2 });
+    peer = new Peer(userID, { host: 'localhost', port: 9000, path: '/endwordy' });
 
     peer.on('open', (id) => {
-        console.log('My Peer is ready with ID:', id); // later out!
+        id = userID;
         document.getElementById('myCode').innerText = id;
     });
 
     peer.on('error', (err) => {
-        console.error("PeerJS Fehler gefunden:", err.type);
-        
-        // WICHTIG: Kein automatisches Reload mehr! 
-        // Wir zeigen dem User lieber eine Nachricht oder generieren intern neu.
-        if (err.type === 'unavailable-id') {
-            const newID = setUserID();
-            localStorage.setItem('endwordy_userID', newID);
-            console.log("ID belegt, versuche neue ID beim nächsten Start.");
+        console.error("Peer-Error:", err.type); //later out
+
+        if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-closed') {
+            if (!peer.destroyed) {
+                console.log("Reconnecting in 2 seconds..."); //later out
+                setTimeout(() => {
+                    if (peer.disconnected) peer.reconnect();
+                }, 2000);
+            }
         }
-        
-        if (err.type === 'network' || err.type === 'server-error') {
-            document.getElementById('statusText').innerText = "Serververbindung verloren. Bitte warte 5 Sek.";
-            // Wir trennen alles sauber
-            peer.disconnect();
+
+        if (err.type === 'unavailable-id') {
+            console.warn("ID still taken. Waiting for Server-Timeout..."); // later out
         }
     });
 
@@ -115,6 +114,12 @@ function initializeTheirTurn() {
 async function checkWord() {
     myWord = document.getElementById('answerInput').value;
 
+    if(friendsWord && myWord.length > 0 && myWord[0] != friendsWord[friendsWord.length - 1]) {
+        document.getElementById('answerInput').className = 'error-border';
+        document.getElementById('invalidAnswer').innerText = errorWrongStart;
+        return;
+    }
+
     // const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${givenWord}`;
     const url = `https://freedictionaryapi.com/api/v1/entries/en/${myWord}`;
 
@@ -149,10 +154,21 @@ async function checkWord() {
  */
 function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
+        document.getElementById('answerInput').classList.remove('error-border');
+        document.getElementById('invalidAnswer').innerText = '';
         if (e.key === 'Enter') {
             checkWord();
         }
     });
+    document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (peer) peer.disconnect(); 
+    } else {
+        if (peer && peer.disconnected) {
+            peer.reconnect();
+        }
+    }
+});
     document.getElementById('enterRoom').addEventListener('click', () => {
         const code = document.getElementById('friendCodeInput').value;
         if (peer && !peer.disconnected) {
