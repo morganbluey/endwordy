@@ -12,6 +12,7 @@ let myWord = "abcdefg";
 let friendsWord;
 let lastLetter = "";
 let myTurn;
+let initialized = false;
 
 let peer;
 let currentConnection;
@@ -61,6 +62,7 @@ function initializeMyTurn() {
     document.getElementById('statusText').innerText = textMyTurn;
     document.getElementsByName('answerIn')[0].placeholder = 'Type your word';
     document.querySelector('.firstOpen').close();
+    initialized = true;
 }
 
 /**
@@ -72,6 +74,7 @@ function initializeTheirTurn() {
     document.getElementById('statusText').innerText = textTheirTurn;
     document.getElementsByName('answerIn')[0].disabled = true;
     document.querySelector('.firstOpen').close();
+    initialized = true;
 }
 
 /**
@@ -139,12 +142,15 @@ function setupEventListeners() {
         if (peer) {
             const conn = peer.connect(code);
             setupConnectionListeners(conn);
+            console.log(myTurn);
             conn.send({ type: "connectionOpen", turn: !myTurn });
+            console.log(myTurn);
             if (myTurn === true) {
                 initializeMyTurn(); 
             } else {
                 initializeTheirTurn();
             }
+            initialized = true;
         }
     });
 }
@@ -152,17 +158,18 @@ function setupEventListeners() {
 function setupConnectionListeners(conn) {
     currentConnection = conn;
 
-    // conn.on('open', () => {
-    //     console.log("im sending eventhough im not actively typing code")
-    // });
+    conn.on('open', () => {
+        console.log("Connection established")
+    });
 
     conn.on('data', (data) => {
-        if (data && data.type && data.type === "connectionOpen") {
+        if (data && data.type && data.type === "connectionOpen" && !initialized) {
             if (data.turn === true) {
                 initializeMyTurn(); 
             } else {
                 initializeTheirTurn();
             }
+            initialized = true;
         }
         if (data && data.type && data.type === "switchTurn") {
             document.getElementById('answerInput').hidden = false;
